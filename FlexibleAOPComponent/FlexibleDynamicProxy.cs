@@ -68,6 +68,9 @@ namespace FlexibleAOPComponent
     #endregion
 
     #region 一般动态代理
+
+    public delegate void CustomeProxyEventHander<TEventArgs>(object sender, TEventArgs e, object obj);
+
     public sealed class FlexibleDynamicProxy : RealProxy
     {
         private Predicate<MethodInfo> _Filter;
@@ -83,8 +86,8 @@ namespace FlexibleAOPComponent
             }
         }
         public event EventHandler<IMethodCallMessage> BeforeExecute;
-        public event EventHandler<IMethodCallMessage> AfterExecute;
-        public event EventHandler<IMethodCallMessage> ErrorExecuting;
+        public event CustomeProxyEventHander<IMethodCallMessage> AfterExecute;
+        public event CustomeProxyEventHander<IMethodCallMessage> ErrorExecuting;
         public FlexibleDynamicProxy(Type type) :
             base(type)
         {
@@ -99,29 +102,38 @@ namespace FlexibleAOPComponent
                     BeforeExecute(this, methodCall);
             }
         }
-        private void OnAfterExecute(IMethodCallMessage methodCall)
+        private void OnAfterExecute(IMethodCallMessage methodCall, object returnValue = null)
         {
             if (AfterExecute != null)
             {
                 var methodInfo = methodCall.MethodBase as MethodInfo;
                 if (_Filter(methodInfo))
-                    AfterExecute(this, methodCall);
+                    AfterExecute(this, methodCall, returnValue);
             }
         }
-        private void OnErrorExecuting(IMethodCallMessage methodCall)
+        private void OnErrorExecuting(IMethodCallMessage methodCall, string innerException)
         {
             if (ErrorExecuting != null)
             {
                 var methodInfo = methodCall.MethodBase as MethodInfo;
                 if (_Filter(methodInfo))
-                    ErrorExecuting(this, methodCall);
+                    ErrorExecuting(this, methodCall, innerException);
             }
         }
-        
+
+
+        private static object obj = new object();
         //调用代理的类型的方法
         public override IMessage Invoke(IMessage msg)
         {
+            //用lock来防止多线程在一个时间同时操作方法
+            //lock (obj)
+            //{
+
+            //}
+
             object returnIMessage = null;
+            IMessage message;
             //如果是调用了构造函数就进入使用下面的代码 
             if (msg is IConstructionCallMessage)
             {
@@ -135,7 +147,7 @@ namespace FlexibleAOPComponent
             //如果调用方法是一般方法，进入If语句
             else
             {
-               
+
                 var methodCall = msg as IMethodCallMessage;
                 var methodInfo = methodCall.MethodBase as MethodInfo;
                 //if(_Filter(methodInfo))
@@ -146,9 +158,10 @@ namespace FlexibleAOPComponent
                     var result = methodInfo.Invoke(GetUnwrappedServer(), methodCall.InArgs);
                     //if (_Filter(methodInfo))
                     //    Log("In Dynamic Proxy - After executing '{0}' ", methodCall.MethodName);
-                    OnAfterExecute(methodCall);
-                    returnIMessage = new ReturnMessage(result, null, 0,
+                    message = new ReturnMessage(result, null, 0,
         methodCall.LogicalCallContext, methodCall);
+                    OnAfterExecute(methodCall, message.Properties["__Return"]);
+                    returnIMessage = message;
                 }
                 catch (Exception ex)
                 {
@@ -156,7 +169,7 @@ namespace FlexibleAOPComponent
                     //                 Log(string.Format(
                     //"In Dynamic Proxy- Exception {0} executing '{1}'", ex),
                     //methodCall.MethodName);
-                    OnErrorExecuting(methodCall);
+                    OnErrorExecuting(methodCall, ex.InnerException.ToString());
                     returnIMessage = new ReturnMessage(ex, methodCall);
                 }
             }
