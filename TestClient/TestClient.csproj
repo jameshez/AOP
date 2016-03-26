@@ -81,9 +81,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{9439dc9f-4c50-4d08-9104-33d69444da6d}</Project>
-      <Name>Common</Name>
+    <ProjectReference Include="..\FlexibleAOPComponent\FlexibleAOPComponent.csproj">
+      <Project>{e1a387de-ce6b-41d9-9a14-79e38f06d7d7}</Project>
+      <Name>FlexibleAOPComponent</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
