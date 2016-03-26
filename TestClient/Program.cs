@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TestClient
 {
-    class Program: ObjectWithAspects
+    class Program : ObjectWithAspects
     {
         public static void MethodOne()
         {
@@ -21,8 +21,18 @@ namespace TestClient
 
         static void Main(string[] args)
         {
-            ButtonMgr bm = new ButtonMgr();
-            var r = bm.AddButton(1);
+            try
+            {
+                ButtonMgr bm = new ButtonMgr();
+                var r = bm.AddButton(1);
+                var rs = bm.MultiParametersMethod(21, "sdss", new List<int>() { 1, 2, 34, 5 });
+                var r1 = ButtonMgr.k;
+            }
+            catch (Exception EX)
+            {
+                Console.WriteLine(EX.ToString());
+            }
+            Console.Read();
         }
 
 

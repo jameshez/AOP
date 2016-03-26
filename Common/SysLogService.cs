@@ -6,6 +6,7 @@ namespace Common
     {
         private static SysLogService _SysLogService;
         private static object obj = new object();
+        private static LogContext _DB = new LogContext();
         internal static SysLogService GetInstance()
         {
             if (_SysLogService == null)
@@ -28,11 +29,8 @@ namespace Common
         {
             lock (obj)
             {
-                using (LogContext db = new LogContext())
-                {
-                    db.Logs.Add(log);
-                    db.SaveChanges();
-                }
+                _DB.Logs.Add(log);
+                _DB.SaveChanges();
             }
         }
     }

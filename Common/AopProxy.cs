@@ -5,19 +5,20 @@ using System.Runtime.Remoting.Proxies;
 
 namespace Common
 {
-    public class AopProxy : RealProxy
+    public class AOPProxy : RealProxy
     {
         /// <summary>
         /// AOP协议用于记录运行日志
         /// </summary>
         /// <param name="serverType"></param>
-        public AopProxy(Type serverType)
+        public AOPProxy(Type serverType)
             : base(serverType)
         { }
 
         public override IMessage Invoke(IMessage msg)
         {
-            DateTime startTime = DateTime.Now;//方法启动时间
+            //方法启动时间
+            DateTime startTime = DateTime.Now;
             //记录方法返回结果
             string returnvalue = "null";
             Log log = new Log();
@@ -36,7 +37,7 @@ namespace Common
                 IConstructionCallMessage constructCallMsg = msg as IConstructionCallMessage;
                 IConstructionReturnMessage constructionReturnMessage = this.InitializeServerObject((IConstructionCallMessage)msg);
                 RealProxy.SetStubData(this, constructionReturnMessage.ReturnValue);
-                Console.WriteLine("Call constructor");
+                //记录方法输入参数
                 object[] args = constructCallMsg.Args;
                 for (int i = 0; i < args.Length; i++)
                 {
@@ -55,14 +56,11 @@ namespace Common
                     object[] args = callMsg.Args;
                     object o = callMsg.MethodBase.Invoke(GetUnwrappedServer(), args);
                     message = new ReturnMessage(o, args, args.Length, callMsg.LogicalCallContext, callMsg);
-                    #region 记录方法输入参数
-                    //log.IP = args[args.Length-2].ToString();
-                    //log.Mac = args[args.Length - 1].ToString();
+                    //记录方法输入参数
                     for (int i = 0; i < args.Length; i++)
                     {
                         log.Args += args[i].ToString() + ",";
                     }
-                    #endregion
                 }
                 catch (Exception e)
                 {
@@ -78,10 +76,11 @@ namespace Common
                 returnIMessage = message;
 
             }
-            DateTime endTime = DateTime.Now;//方法结束时间
+            //方法结束时间
+            DateTime endTime = DateTime.Now;
             log.UseTime = (endTime - startTime).ToString();
-            SysLogService.GetInstance().InsertAccessLog(log);//写入日志到数据库
-            //WriteLog.GetInstance().NewLog(string.Format("{0}:{1}", log.MethodName, log.ReturnValue));//写入日志到本地文件
+            //写入日志到数据库
+            SysLogService.GetInstance().InsertAccessLog(log);
             return returnIMessage as IMessage;
         }
 

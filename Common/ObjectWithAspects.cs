@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Common
 {
-    [Aop]
+    [AOP]
     public abstract class ObjectWithAspects : ContextBoundObject
     {
     }
